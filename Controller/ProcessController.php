@@ -24,6 +24,11 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class ProcessController extends ContainerAware
 {
     /**
+     * @var string Parameter of an array of keys that have to be merged from $request->attributes to $request->query
+     */
+    const ATTRIBUTES_TO_BE_PASSED_PARAMETER = 'sylius.attributeparameterstobepassed';
+
+    /**
      * Build and start process for given scenario.
      * This action usually redirects to first step.
      *
@@ -35,6 +40,18 @@ class ProcessController extends ContainerAware
     public function startAction(Request $request, $scenarioAlias)
     {
         $coordinator = $this->container->get('sylius.process.coordinator');
+
+        if ($this->container->hasParameter(self::ATTRIBUTES_TO_BE_PASSED_PARAMETER)) {
+            $attributeParametersToBePassed = $this->container->getParameter(self::ATTRIBUTES_TO_BE_PASSED_PARAMETER);
+
+            foreach ($attributeParametersToBePassed as $attributeParameter) {
+
+                // If key is given in attributes and is not already set in querystring, merge it
+                if (false === $request->query->has($attributeParameter) && $request->attributes->has($attributeParameter)) {
+                    $request->query->set($attributeParameter, $request->attributes->get($attributeParameter));
+                }
+            }
+        }
 
         return $coordinator->start($scenarioAlias, $request->query);
     }
