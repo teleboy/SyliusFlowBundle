@@ -14,6 +14,10 @@
         {
             "name": "Community contributions",
             "homepage": "https://github.com/Sylius/SyliusFlowBundle/contributors"
+        },
+        {
+            "name": "Teleboy DEV Team",
+            "homepage": "http://www.teleboy.ch/"
         }
     ],
     "require": {
