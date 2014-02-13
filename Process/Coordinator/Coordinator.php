@@ -236,7 +236,7 @@ class Coordinator implements CoordinatorInterface
         );
 
         // Append the query string if given
-        if (null !== $queryParameters) {
+        if ($queryParameters && $queryParameters->count()) {
             $routeParameters = array_merge($queryParameters->all(), $routeParameters);
         }
 
