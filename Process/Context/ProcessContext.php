@@ -285,9 +285,10 @@ class ProcessContext implements ProcessContextInterface
      */
     public function getStepHistory()
     {
-        // Use cookie history instead of
-        return $this->history;
-//        return $this->storage->get('history', array());
+        $sessionHistory = $this->storage->get('history', array());
+
+        // Are there steps missing in cookie history workaround? seems like cookie don't work here
+        return sizeof($sessionHistory) > sizeof($this->history) ? $sessionHistory : $this->history;
     }
 
     /**
@@ -300,7 +301,7 @@ class ProcessContext implements ProcessContextInterface
         $data = json_encode($history);
         setcookie('stephistory', $data, null, '/');
 
-        //$this->storage->set('history', $history);
+        $this->storage->set('history', $history);
     }
 
     /**
