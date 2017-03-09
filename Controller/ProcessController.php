@@ -11,7 +11,8 @@
 
 namespace Sylius\Bundle\FlowBundle\Controller;
 
-use Symfony\Component\DependencyInjection\ContainerAware;
+use Symfony\Component\DependencyInjection\ContainerAwareInterface;
+use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -21,8 +22,11 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  *
  * @author Paweł Jędrzejewski <pjedrzejewski@diweb.pl>
  */
-class ProcessController extends ContainerAware
+class ProcessController implements ContainerAwareInterface
 {
+
+    use ContainerAwareTrait;
+
     /**
      * @var string Parameter of an array of keys that have to be merged from $request->attributes to $request->query
      */
