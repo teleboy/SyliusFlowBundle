@@ -110,7 +110,7 @@ class ProcessContext implements ProcessContextInterface
         $this->storage->initialize(md5($process->getScenarioAlias()));
 
         // Load history from cookie
-        $this->history = $this->getCookieHistory();
+        $this->history = $this->getHistory();
 
         $steps = $process->getOrderedSteps();
 
@@ -133,19 +133,9 @@ class ProcessContext implements ProcessContextInterface
      *
      * @return string[]
      */
-    protected function getCookieHistory()
+    protected function getHistory()
     {
-        if (isset($_COOKIE['stephistory'])) {
-            if (!empty($_COOKIE['stephistory'])) {
-                $cookieHistory = json_decode($_COOKIE['stephistory'], true);
-
-                if (is_array($cookieHistory)) {
-                    return $cookieHistory;
-                }
-            }
-        }
-
-        return array();
+        $this->storage->get('history', array());
     }
 
     /**
@@ -285,10 +275,7 @@ class ProcessContext implements ProcessContextInterface
      */
     public function getStepHistory()
     {
-        $sessionHistory = $this->storage->get('history', array());
-
-        // Are there steps missing in cookie history workaround? seems like cookie don't work here
-        return sizeof($sessionHistory) > sizeof($this->history) ? $sessionHistory : $this->history;
+        return $this->storage->get('history', array());
     }
 
     /**
@@ -296,10 +283,7 @@ class ProcessContext implements ProcessContextInterface
      */
     public function setStepHistory(array $history)
     {
-        // workaround for cookie history
         $this->history = $history;
-        $data = json_encode($history);
-        setcookie('stephistory', $data, null, '/');
 
         $this->storage->set('history', $history);
     }
