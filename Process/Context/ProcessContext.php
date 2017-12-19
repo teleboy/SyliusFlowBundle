@@ -81,10 +81,6 @@ class ProcessContext implements ProcessContextInterface
      */
     protected $initialized;
 
-    /**
-     * @var string[] Workaround because session history seems to be broken after payment
-     */
-    protected $history = array();
 
     /**
      * Constructor.
@@ -108,9 +104,6 @@ class ProcessContext implements ProcessContextInterface
         $this->currentStep = $currentStep;
 
         $this->storage->initialize(md5($process->getScenarioAlias()));
-
-        // Load history from cookie
-        $this->history = $this->getHistory();
 
         $steps = $process->getOrderedSteps();
 
@@ -283,8 +276,6 @@ class ProcessContext implements ProcessContextInterface
      */
     public function setStepHistory(array $history)
     {
-        $this->history = $history;
-
         $this->storage->set('history', $history);
     }
 
