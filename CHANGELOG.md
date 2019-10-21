@@ -1,6 +1,5 @@
 CHANGELOG
 =========
 
-### 07-02-2013
-
-* Remove ``sylius_flow`` prefix, used simple ``sylius`` instead.
+# 0.3.0 - 2019-10-21
+* Replace ContainerAware with ContainerAwareInterface and ContainerAwareTrait
