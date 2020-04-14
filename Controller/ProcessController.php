@@ -78,7 +78,7 @@ class ProcessController implements ContainerAwareInterface
         try {
             return $coordinator->display($scenarioAlias, $stepName, $request->query);
         } catch (\InvalidArgumentException $e) {
-            throw new NotFoundHttpException('The step you are looking for is not found.', $e);
+            throw new NotFoundHttpException('The step you are looking for is not found. (' . $scenarioAlias . '/' . $stepName . ')', $e);
         }
     }
 
