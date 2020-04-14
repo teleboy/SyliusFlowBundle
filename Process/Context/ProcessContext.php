@@ -81,6 +81,10 @@ class ProcessContext implements ProcessContextInterface
      */
     protected $initialized;
 
+    /**
+     * @var string[] Workaround because session history seems to be broken after payment
+     */
+    protected $history = [];
 
     /**
      * Constructor.
@@ -105,6 +109,9 @@ class ProcessContext implements ProcessContextInterface
 
         $this->storage->initialize(md5($process->getScenarioAlias()));
 
+        // Load history from cookie
+        $this->history = $this->getCookieHistory();
+
         $steps = $process->getOrderedSteps();
 
         foreach ($steps as $index => $step) {
@@ -119,16 +126,6 @@ class ProcessContext implements ProcessContextInterface
         $this->initialized = true;
 
         return $this;
-    }
-
-    /**
-     * Load history from cookie
-     *
-     * @return string[]
-     */
-    protected function getHistory()
-    {
-        $this->storage->get('history', array());
     }
 
     /**
@@ -268,7 +265,10 @@ class ProcessContext implements ProcessContextInterface
      */
     public function getStepHistory()
     {
-        return $this->storage->get('history', array());
+        $sessionHistory = $this->storage->get('history', []);
+
+        // Are there steps missing in cookie history workaround? seems like cookie don't work here
+        return \count($sessionHistory) > \count($this->history) ? $sessionHistory : $this->history;
     }
 
     /**
@@ -276,6 +276,11 @@ class ProcessContext implements ProcessContextInterface
      */
     public function setStepHistory(array $history)
     {
+        // workaround for cookie history
+        $this->history = $history;
+        $data          = \json_encode($history);
+        \setcookie('stephistory', $data, null, '/');
+
         $this->storage->set('history', $history);
     }
 
@@ -309,6 +314,26 @@ class ProcessContext implements ProcessContextInterface
         }
 
         $this->setStepHistory($history);
+    }
+
+    /**
+     * Load history from cookie
+     *
+     * @return string[]
+     */
+    protected function getCookieHistory()
+    {
+        if (isset($_COOKIE['stephistory'])) {
+            if (!empty($_COOKIE['stephistory'])) {
+                $cookieHistory = \json_decode($_COOKIE['stephistory'], true);
+
+                if (\is_array($cookieHistory)) {
+                    return $cookieHistory;
+                }
+            }
+        }
+
+        return [];
     }
 
     /**
