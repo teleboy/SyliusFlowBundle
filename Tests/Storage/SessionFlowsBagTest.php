@@ -11,6 +11,7 @@
 
 namespace Sylius\Bundle\FlowBundle\Tests\Storage;
 
+use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\FlowBundle\Storage\SessionFlowsBag;
 
 /**
@@ -18,7 +19,7 @@ use Sylius\Bundle\FlowBundle\Storage\SessionFlowsBag;
  *
  * @author Leszek Prabucki <leszek.prabucki@gmail.com>
  */
-class SessionFlowsBagTest extends \PHPUnit_Framework_TestCase
+class SessionFlowsBagTest extends TestCase
 {
     /**
      * @test
@@ -27,7 +28,7 @@ class SessionFlowsBagTest extends \PHPUnit_Framework_TestCase
     {
         $sessionBag = new SessionFlowsBag();
 
-        $this->assertEquals('sylius.flow.bag', $sessionBag->getName());
+        self::assertEquals('sylius.flow.bag', $sessionBag->getName());
     }
 
     /**
@@ -38,6 +39,6 @@ class SessionFlowsBagTest extends \PHPUnit_Framework_TestCase
         $sessionBag = new SessionFlowsBag();
         $sessionBag->set('key', 'value');
 
-        $this->assertEquals('value', $sessionBag->get('key'));
+        self::assertEquals('value', $sessionBag->get('key'));
     }
 }

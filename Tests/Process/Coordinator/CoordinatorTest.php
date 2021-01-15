@@ -11,24 +11,29 @@
 
 namespace Sylius\Bundle\FlowBundle\Tests\Process\Coordinator;
 
+use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\FlowBundle\Validator\ProcessValidator;
 use Symfony\Component\HttpFoundation\Response;
 
 use Sylius\Bundle\FlowBundle\Process\Coordinator\Coordinator;
 use Sylius\Bundle\FlowBundle\Process\Coordinator\CoordinatorInterface;
 use Sylius\Bundle\FlowBundle\Process\Step\ActionResult;
+use Sylius\Bundle\FlowBundle\Process\Context\ProcessContextInterface;
+use Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Coordinator test.
  *
  * @author Leszek Prabucki <leszek.prabucki@gmail.com>
  */
-class CoordinatorTest extends \PHPUnit_Framework_TestCase
+class CoordinatorTest extends TestCase
 {
     /** @var CoordinatorInterface */
     private $coordinator;
 
-    public function setUp()
+    public function setUp(): void
     {
         $router = $this->getRouter(
             'sylius_flow_display',
@@ -60,12 +65,12 @@ class CoordinatorTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldRedirectToDefaultDisplayActionWhenStarting()
     {
-        $this->coordinator->registerScenario('scenarioOne', $this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->coordinator->registerScenario('scenarioOne', $this->getMockBuilder('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface')->getMock());
 
         $response = $this->coordinator->start('scenarioOne');
 
-        $this->assertInstanceOf('Symfony\Component\HttpFoundation\RedirectResponse', $response);
-        $this->assertEquals('http://someurl.dev/step/scenarioOne/firstStepName', $response->getTargetUrl());
+        self::assertInstanceOf('Symfony\Component\HttpFoundation\RedirectResponse', $response);
+        self::assertEquals('http://someurl.dev/step/scenarioOne/firstStepName', $response->getTargetUrl());
     }
 
     /**
@@ -97,40 +102,49 @@ class CoordinatorTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(array()));
 
         $this->coordinator = $this->createCoordinator($router, $processBuilder, $processContext);
-        $this->coordinator->registerScenario('scenarioOne', $this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->coordinator->registerScenario('scenarioOne', $this->getMockBuilder(ProcessScenarioInterface::class)->getMock());
         $response = $this->coordinator->start('scenarioOne');
 
-        $this->assertInstanceOf('Symfony\Component\HttpFoundation\RedirectResponse', $response);
-        $this->assertEquals('http://someurl.dev/my-super-route/firstStepName', $response->getTargetUrl());
+        self::assertInstanceOf(RedirectResponse::class, $response);
+        self::assertEquals('http://someurl.dev/my-super-route/firstStepName', $response->getTargetUrl());
     }
 
     /**
      * @test
-     * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage Process scenario with alias "scenarioOne" is not registered
+     *
+     *
      */
-    public function shouldNotStartWhenScenarioIsNotRegistered()
+    public function shouldNotStartWhenScenarioIsNotRegistered(): void
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("Process scenario with alias \"scenarioOne\" is not registered");
         $this->coordinator->start('scenarioOne');
     }
 
     /**
      * @test
-     * @expectedException \Symfony\Component\HttpKernel\Exception\HttpException
+     *
      */
-    public function shouldNotStartWhenProcessIsNotValid()
+    public function shouldNotStartWhenProcessIsNotValid(): void
     {
+        $this->expectException(HttpException::class);
         $router = $this->getRouter();
 
         $processBuilder = $this->getProcessBuilder($this->getProcess());
 
         $processContext = $this->getProcessContext();
-        $processContext->expects($this->any())
+        $processContext
             ->method('isValid')
-            ->will($this->returnValue(new ProcessValidator(function() { return false; })));
+            ->willReturn(
+                    new ProcessValidator(
+                            function () {
+                                return false;
+                            }
+                    )
+            );
 
         $this->coordinator = $this->createCoordinator($router, $processBuilder, $processContext);
-        $this->coordinator->registerScenario('scenarioOne', $this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->coordinator->registerScenario('scenarioOne', $this->getMockBuilder(ProcessScenarioInterface::class)->getMock());
         $this->coordinator->start('scenarioOne');
     }
 
@@ -139,59 +153,66 @@ class CoordinatorTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldShowDisplayAction()
     {
-        $this->coordinator->registerScenario('scenarioOne', $this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->coordinator->registerScenario('scenarioOne', $this->getMockBuilder(ProcessScenarioInterface::class)->getMock());
 
         $result = $this->coordinator->display('scenarioOne', 'someStepName');
 
-        $this->assertInstanceOf('Symfony\Component\HttpFoundation\Response', $result);
+        self::assertInstanceOf(Response::class, $result);
     }
 
     /**
      * @test
-     * @expectedException \Symfony\Component\HttpKernel\Exception\HttpException
      */
     public function shouldNotShowDisplayActionWhenProcessIsNotValid()
     {
+        $this->expectException(HttpException::class);
         $router = $this->getRouter();
 
         $processBuilder = $this->getProcessBuilder($this->getProcess());
 
         $processContext = $this->getProcessContext();
-        $processContext->expects($this->any())
+        $processContext
             ->method('isValid')
-            ->will($this->returnValue(new ProcessValidator(function() { return false; })));
+            ->willReturn(
+                    new ProcessValidator(
+                            function () {
+                                return false;
+                            }
+                    )
+            );
 
         $this->coordinator = $this->createCoordinator($router, $processBuilder, $processContext);
-        $this->coordinator->registerScenario('scenarioOne', $this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->coordinator->registerScenario('scenarioOne', $this->getMockBuilder(ProcessScenarioInterface::class)->getMock());
         $this->coordinator->display('scenarioOne', 'someStepName');
     }
 
     /**
      * @test
-     * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage Process scenario with alias "scenarioOne" is not registered
      */
     public function shouldNotShowDisplayActionWhenScenarioIsNotRegistered()
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("Process scenario with alias \"scenarioOne\" is not registered");
         $this->coordinator->display('scenarioOne', 'someStepName');
     }
 
     /**
      * @test
-     * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage Process scenario with alias "scenarioOne" is not registered
      */
     public function shouldNotShowForwardActionWhenScenarioIsNotRegistered()
     {
+        $this->expectExceptionMessage("Process scenario with alias \"scenarioOne\" is not registered");
+        $this->expectException(\InvalidArgumentException::class);
         $this->coordinator->forward('scenarioOne', 'someStepName');
     }
 
     /**
      * @test
-     * @expectedException \Symfony\Component\HttpKernel\Exception\HttpException
+     *
      */
     public function shouldNotShowForwardWhenProcessIsNotValid()
     {
+        $this->expectException(HttpException::class);
         $router = $this->getRouter();
 
         $processBuilder = $this->getProcessBuilder($this->getProcess());
@@ -202,52 +223,54 @@ class CoordinatorTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(new ProcessValidator(function() { return false; })));
 
         $this->coordinator = $this->createCoordinator($router, $processBuilder, $processContext);
-        $this->coordinator->registerScenario('scenarioOne', $this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->coordinator->registerScenario('scenarioOne', $this->getMockBuilder('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface')->getMock());
         $this->coordinator->forward('scenarioOne', 'someStepName');
     }
 
     /**
      * @test
-     * @expectedException RuntimeException
+     *
      */
     public function shouldNotShowFormWhenForwardReturnsUnexpectedType()
     {
+        $this->expectException(\RuntimeException::class);
         $router = $this->getRouter();
 
         $processBuilder = $this->getProcessBuilder($this->getProcess());
 
         $processContext = $this->getProcessContext();
-        $processContext->expects($this->any())
+        $processContext
             ->method('isValid')
-            ->will($this->returnValue(true));
+            ->willReturn(true);
 
         $this->coordinator = $this->createCoordinator($router, $processBuilder, $processContext);
-        $this->coordinator->registerScenario('scenarioOne', $this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->coordinator->registerScenario('scenarioOne', $this->getMockBuilder(ProcessScenarioInterface::class)->getMock());
 
         $result = $this->coordinator->forward('scenarioOne', 'unexpectedTypeStep');
-        $this->assertInstanceOf('Symfony\Component\HttpFoundation\Response', $result);
+        self::assertInstanceOf(Response::class, $result);
     }
 
     /**
      * @test
-     * @expectedException RuntimeException
+     *
      */
     public function shouldShowFormWhenForwardReturnsUnexpectedType()
     {
+        $this->expectException(\RuntimeException::class);
         $router = $this->getRouter();
 
         $processBuilder = $this->getProcessBuilder($this->getProcess());
 
         $processContext = $this->getProcessContext();
-        $processContext->expects($this->any())
+        $processContext
             ->method('isValid')
-            ->will($this->returnValue(true));
+            ->willReturn(true);
 
         $this->coordinator = $this->createCoordinator($router, $processBuilder, $processContext);
-        $this->coordinator->registerScenario('scenarioOne', $this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->coordinator->registerScenario('scenarioOne', $this->getMockBuilder(ProcessScenarioInterface::class)->getMock());
 
         $result = $this->coordinator->forward('scenarioOne', 'unexpectedTypeStep');
-        $this->assertInstanceOf('Symfony\Component\HttpFoundation\Response', $result);
+        self::assertInstanceOf(Response::class, $result);
     }
 
     /**
@@ -266,21 +289,23 @@ class CoordinatorTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(true));
 
         $this->coordinator = $this->createCoordinator($router, $processBuilder, $processContext);
-        $this->coordinator->registerScenario('scenarioOne', $this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->coordinator->registerScenario('scenarioOne', $this->getMockBuilder('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface')->getMock());
 
         $result = $this->coordinator->forward('scenarioOne', 'notForwardStep');
-        $this->assertInstanceOf('Symfony\Component\HttpFoundation\Response', $result);
+        self::assertInstanceOf('Symfony\Component\HttpFoundation\Response', $result);
     }
 
     /**
      * @test
-     * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage Process scenario with alias "scenarioOne" is already registered
+     *
+     *
      */
     public function shouldNotRegisterScenarioAgain()
     {
-        $this->coordinator->registerScenario('scenarioOne', $this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
-        $this->coordinator->registerScenario('scenarioOne', $this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage("Process scenario with alias \"scenarioOne\" is already registered");
+        $this->coordinator->registerScenario('scenarioOne', $this->getMockBuilder(ProcessScenarioInterface::class)->getMock());
+        $this->coordinator->registerScenario('scenarioOne', $this->getMockBuilder(ProcessScenarioInterface::class)->getMock());
     }
 
     /**
@@ -314,12 +339,12 @@ class CoordinatorTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(array()));
 
         $this->coordinator = $this->createCoordinator($router, $processBuilder, $processContext);
-        $this->coordinator->registerScenario('scenarioOne', $this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->coordinator->registerScenario('scenarioOne', $this->getMockBuilder('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface')->getMock());
 
         $response = $this->coordinator->forward('scenarioOne', 'someStepName');
 
-        $this->assertInstanceOf('Symfony\Component\HttpFoundation\RedirectResponse', $response);
-        $this->assertEquals('http://someurl.dev/step/scenarioOne/nextStepName', $response->getTargetUrl());
+        self::assertInstanceOf('Symfony\Component\HttpFoundation\RedirectResponse', $response);
+        self::assertEquals('http://someurl.dev/step/scenarioOne/nextStepName', $response->getTargetUrl());
     }
 
     /**
@@ -353,12 +378,12 @@ class CoordinatorTest extends \PHPUnit_Framework_TestCase
             ->will($this->returnValue(array()));
 
         $this->coordinator = $this->createCoordinator($router, $processBuilder, $processContext);
-        $this->coordinator->registerScenario('scenarioOne', $this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->coordinator->registerScenario('scenarioOne', $this->getMockBuilder('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface')->getMock());
 
         $response = $this->coordinator->forward('scenarioOne', 'goToNextStep');
 
-        $this->assertInstanceOf('Symfony\Component\HttpFoundation\RedirectResponse', $response);
-        $this->assertEquals('http://someurl.dev/step/scenarioOne/nextStepName', $response->getTargetUrl());
+        self::assertInstanceOf('Symfony\Component\HttpFoundation\RedirectResponse', $response);
+        self::assertEquals('http://someurl.dev/step/scenarioOne/nextStepName', $response->getTargetUrl());
     }
 
     /**
@@ -377,25 +402,22 @@ class CoordinatorTest extends \PHPUnit_Framework_TestCase
         $processBuilder = $this->getProcessBuilder($this->getProcess());
 
         $processContext = $this->getProcessContext();
-        $processContext->expects($this->any())
+        $processContext
             ->method('isValid')
-            ->will($this->returnValue(true));
-        $processContext->expects($this->any())
-            ->method('isCompleted')
-            ->will($this->returnValue(true));
-        $processContext->expects($this->once())
+            ->willReturn(true);
+        $processContext->expects(self::once())
             ->method('close');
-        $processContext->expects($this->once())
+        $processContext->expects(self::once())
             ->method('isLastStep')
-            ->will($this->returnValue(true));
+            ->willReturn(true);
 
         $this->coordinator = $this->createCoordinator($router, $processBuilder, $processContext);
-        $this->coordinator->registerScenario('scenarioOne', $this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->coordinator->registerScenario('scenarioOne', $this->getMockBuilder('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface')->getMock());
 
         $response = $this->coordinator->forward('scenarioOne', 'someStepName');
 
-        $this->assertInstanceOf('Symfony\Component\HttpFoundation\RedirectResponse', $response);
-        $this->assertEquals('http://localhost/processRedirect', $response->getTargetUrl());
+        self::assertInstanceOf('Symfony\Component\HttpFoundation\RedirectResponse', $response);
+        self::assertEquals('http://localhost/processRedirect', $response->getTargetUrl());
     }
 
     private function createCoordinator($router, $processBuilder, $processContext)
@@ -409,7 +431,7 @@ class CoordinatorTest extends \PHPUnit_Framework_TestCase
 
     private function getRouter($route = '', $secondParam = array(), $url = 'http://someurl.dev')
     {
-        $router = $this->getMock('Symfony\Component\Routing\RouterInterface');
+        $router = $this->getMockBuilder('Symfony\Component\Routing\RouterInterface')->getMock();
         $router->expects($this->any())
             ->method('generate')
             ->with($this->equalTo($route), $this->equalTo($secondParam))
@@ -420,7 +442,7 @@ class CoordinatorTest extends \PHPUnit_Framework_TestCase
 
     private function getProcessBuilder($process)
     {
-        $builder = $this->getMock('Sylius\Bundle\FlowBundle\Process\Builder\ProcessBuilderInterface');
+        $builder = $this->getMockBuilder('Sylius\Bundle\FlowBundle\Process\Builder\ProcessBuilderInterface')->getMock();
         $builder->expects($this->any())
             ->method('build')
             ->will($this->returnValue(
@@ -432,12 +454,12 @@ class CoordinatorTest extends \PHPUnit_Framework_TestCase
 
     private function getProcessContext()
     {
-        return $this->getMock('Sylius\Bundle\FlowBundle\Process\Context\ProcessContextInterface');
+        return $this->getMockBuilder(ProcessContextInterface::class)->getMock();
     }
 
     private function getProcess()
     {
-        $process = $this->getMock('Sylius\Bundle\FlowBundle\Process\ProcessInterface');
+        $process = $this->getMockBuilder('Sylius\Bundle\FlowBundle\Process\ProcessInterface')->getMock();
         $process->expects($this->any())
             ->method('getFirstStep')
             ->will($this->returnValue(
@@ -468,7 +490,7 @@ class CoordinatorTest extends \PHPUnit_Framework_TestCase
 
     private function getStep($name)
     {
-        $step = $this->getMock('Sylius\Bundle\FlowBundle\Process\Step\StepInterface');
+        $step = $this->getMockBuilder('Sylius\Bundle\FlowBundle\Process\Step\StepInterface')->getMock();
         $step->expects($this->any())
             ->method('getName')
             ->will($this->returnValue($name));

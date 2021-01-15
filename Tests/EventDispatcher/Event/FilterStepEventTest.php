@@ -11,6 +11,7 @@
 
 namespace Sylius\Bundle\FlowBundle\Tests\EventDispatcher\Event;
 
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Sylius\Bundle\FlowBundle\EventDispatcher\SyliusFlowEvents;
 use Sylius\Bundle\FlowBundle\EventDispatcher\Event\FilterStepEvent;
@@ -20,7 +21,7 @@ use Sylius\Bundle\FlowBundle\EventDispatcher\Event\FilterStepEvent;
  *
  * @author Leszek Prabucki <leszek.prabucki@gmail.com>
  */
-class FilterStepEventTest extends \PHPUnit_Framework_TestCase
+class FilterStepEventTest extends TestCase
 {
     /**
      * @test
@@ -43,6 +44,6 @@ class FilterStepEventTest extends \PHPUnit_Framework_TestCase
 
     private function getStep()
     {
-        return $this->getMock('Sylius\Bundle\FlowBundle\Process\Step\StepInterface');
+        return $this->getMockBuilder('Sylius\Bundle\FlowBundle\Process\Step\StepInterface')->getMock();
     }
 }

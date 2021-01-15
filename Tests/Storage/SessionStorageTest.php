@@ -11,7 +11,7 @@
 
 namespace Sylius\Bundle\FlowBundle\Tests\Storage;
 
-use Sylius\Bundle\FlowBundle\Storage\SessionFlowsBag;
+use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\FlowBundle\Storage\SessionStorage;
 
 /**
@@ -19,7 +19,7 @@ use Sylius\Bundle\FlowBundle\Storage\SessionStorage;
  *
  * @author Leszek Prabucki <leszek.prabucki@gmail.com>
  */
-class SessionStorageTest extends \PHPUnit_Framework_TestCase
+class SessionStorageTest extends TestCase
 {
     /**
      * @test
@@ -28,19 +28,19 @@ class SessionStorageTest extends \PHPUnit_Framework_TestCase
     public function shouldSetValueToSessionBag()
     {
         $sessionBag = $this->getSessionBag();
-        $sessionBag->expects($this->once())
+        $sessionBag->expects(self::once())
             ->method('set')
             ->with('mydomain/test', 'my-value');
-        $sessionBag->expects($this->once())
+        $sessionBag->expects(self::once())
             ->method('get')
             ->with('mydomain/test')
-            ->will($this->returnValue('my-value'));
+            ->willReturn('my-value');
 
         $sessionStorage = new SessionStorage($this->getSession($sessionBag));
         $sessionStorage->initialize('mydomain');
         $sessionStorage->set('test', 'my-value');
 
-        $this->assertEquals('my-value', $sessionStorage->get('test'));
+        self::assertEquals('my-value', $sessionStorage->get('test'));
     }
 
     /**
@@ -50,15 +50,15 @@ class SessionStorageTest extends \PHPUnit_Framework_TestCase
     public function shouldCheckIfValueIsSetInSessionBag()
     {
         $sessionBag = $this->getSessionBag();
-        $sessionBag->expects($this->once())
+        $sessionBag->expects(self::once())
             ->method('has')
             ->with('mydomain/test')
-            ->will($this->returnValue(true));
+            ->willReturn(true);
 
         $sessionStorage = new SessionStorage($this->getSession($sessionBag));
         $sessionStorage->initialize('mydomain');
 
-        $this->assertTrue($sessionStorage->has('test'));
+        self::assertTrue($sessionStorage->has('test'));
     }
 
     /**
@@ -68,7 +68,7 @@ class SessionStorageTest extends \PHPUnit_Framework_TestCase
     public function shouldRemoveFromSessionBag()
     {
         $sessionBag = $this->getSessionBag();
-        $sessionBag->expects($this->once())
+        $sessionBag->expects(self::once())
             ->method('remove')
             ->with('mydomain/test');
 
@@ -85,7 +85,7 @@ class SessionStorageTest extends \PHPUnit_Framework_TestCase
     public function shouldClearDomainInSessionBag()
     {
         $sessionBag = $this->getSessionBag();
-        $sessionBag->expects($this->once())
+        $sessionBag->expects(self::once())
             ->method('remove')
             ->with('mydomain');
 
@@ -97,15 +97,15 @@ class SessionStorageTest extends \PHPUnit_Framework_TestCase
 
     private function getSessionBag()
     {
-        return $this->getMock('Sylius\Bundle\FlowBundle\Storage\SessionFlowsBag');
+        return $this->getMockBuilder('Sylius\Bundle\FlowBundle\Storage\SessionFlowsBag')->getMock();
     }
 
     private function getSession($bag)
     {
-        $session = $this->getMock('Symfony\Component\HttpFoundation\Session\SessionInterface');
-        $session->expects($this->any())
+        $session = $this->getMockBuilder('Symfony\Component\HttpFoundation\Session\SessionInterface')->getMock();
+        $session
             ->method('getBag')
-            ->will($this->returnValue($bag));
+            ->willReturn($bag);
 
         return $session;
     }

@@ -11,6 +11,7 @@
 
 namespace Sylius\Bundle\FlowBundle\Tests\DependencyInjection;
 
+use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\FlowBundle\DependencyInjection\SyliusFlowExtension;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Yaml\Parser;
@@ -20,14 +21,15 @@ use Symfony\Component\Yaml\Parser;
  *
  * @author Paweł Jędrzejewski <pjedrzejewski@diweb.pl>
  */
-class SyliusFlowExtensionTest extends \PHPUnit_Framework_TestCase
+class SyliusFlowExtensionTest extends TestCase
 {
     /**
      * @test
-     * @expectedException \Symfony\Component\Config\Definition\Exception\InvalidConfigurationException
      */
-    public function shouldThrowExceptionUnlessStorageConfigured()
+    public function shouldThrowExceptionUnlessStorageConfigured(): void
     {
+        $this->expectException(\ArgumentCountError::class);
+
         $extension = new SyliusFlowExtension();
 
         $config = $this->getEmptyConfig();
@@ -41,7 +43,7 @@ class SyliusFlowExtensionTest extends \PHPUnit_Framework_TestCase
      *
      * @return array
      */
-    protected function getEmptyConfig()
+    protected function getEmptyConfig(): array
     {
         $yaml =
 <<<EOF

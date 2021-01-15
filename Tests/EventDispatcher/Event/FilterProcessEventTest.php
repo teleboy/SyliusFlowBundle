@@ -11,6 +11,7 @@
 
 namespace Sylius\Bundle\FlowBundle\Tests\EventDispatcher\Event;
 
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Sylius\Bundle\FlowBundle\EventDispatcher\SyliusFlowEvents;
 use Sylius\Bundle\FlowBundle\EventDispatcher\Event\FilterProcessEvent;
@@ -20,7 +21,7 @@ use Sylius\Bundle\FlowBundle\EventDispatcher\Event\FilterProcessEvent;
  *
  * @author Leszek Prabucki <leszek.prabucki@gmail.com>
  */
-class FilterProcessEventTest extends \PHPUnit_Framework_TestCase
+class FilterProcessEventTest extends TestCase
 {
     /**
      * @test
@@ -43,6 +44,6 @@ class FilterProcessEventTest extends \PHPUnit_Framework_TestCase
 
     private function getProcess()
     {
-        return $this->getMock('Sylius\Bundle\FlowBundle\Process\ProcessInterface');
+        return $this->getMockBuilder('Sylius\Bundle\FlowBundle\Process\ProcessInterface')->getMock();
     }
 }

@@ -11,30 +11,37 @@
 
 namespace Sylius\Bundle\FlowBundle\Tests\Process\Builder;
 
+use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\FlowBundle\Process\Builder\ProcessBuilder;
+use Sylius\Bundle\FlowBundle\Process\Process;
+use Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+use Sylius\Bundle\FlowBundle\Process\ProcessInterface;
+use Sylius\Bundle\FlowBundle\Process\Step\StepInterface;
+use Sylius\Bundle\FlowBundle\Process\Step\ContainerAwareStep;
 
 /**
  * ProcessBuilder test.
  *
  * @author Leszek Prabucki <leszek.prabucki@gmail.com>
  */
-class ProcessBuilderTest extends \PHPUnit_Framework_TestCase
+class ProcessBuilderTest extends TestCase
 {
     private $builder;
 
-    public function setUp()
+    public function setUp(): void
     {
-        $this->builder = new TestProcessBuilder($this->getMock('Symfony\Component\DependencyInjection\ContainerInterface'));
+        $this->builder = new TestProcessBuilder($this->getMockBuilder(ContainerInterface::class)->getMock());
     }
 
     /**
      * @test
      */
-    public function shouldCreateProcess()
+    public function shouldCreateProcess(): void
     {
-        $process = $this->builder->build($this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $process = $this->builder->build($this->getMockBuilder(ProcessScenarioInterface::class)->getMock());
 
-        $this->assertInstanceOf('Sylius\Bundle\FlowBundle\Process\Process', $process);
+        self::assertInstanceOf(Process::class, $process);
     }
 
     /**
@@ -42,7 +49,7 @@ class ProcessBuilderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldBuildScenario()
     {
-        $scenario = $this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface');
+        $scenario = $this->getMockBuilder('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface')->getMock();
         $scenario->expects($this->once())
             ->method('build')
             ->with($this->equalTo($this->builder));
@@ -52,11 +59,12 @@ class ProcessBuilderTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @test
-     * @expectedException \RuntimeException
+     *
      */
-    public function shouldNotAddWihtoutProcess()
+    public function shouldNotAddWihtoutProcess(): void
     {
-        $process = $this->getMock('Sylius\Bundle\FlowBundle\Process\ProcessInterface');
+        $this->expectException(\RuntimeException::class);
+        $process = $this->getMockBuilder(ProcessInterface::class)->getMock();
 
         $this->builder->registerStep('new', $this->getStep('somename'));
         $this->builder->add('somename', 'new');
@@ -68,12 +76,12 @@ class ProcessBuilderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldInjectContainerToContainerAwareStep()
     {
-        $step = $this->getMock('Sylius\Bundle\FlowBundle\Process\Step\ContainerAwareStep');
-        $step->expects($this->once())
+        $step = $this->getMockBuilder(ContainerAwareStep::class)->getMock();
+        $step->expects(self::once())
             ->method('setContainer')
-            ->with($this->isInstanceOf('Symfony\Component\DependencyInjection\ContainerInterface'));
+            ->with(self::isInstanceOf(ContainerInterface::class));
 
-        $this->builder->build($this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->builder->build($this->getMockBuilder(ProcessScenarioInterface::class)->getMock());
         $this->builder->add('somename', $step);
     }
 
@@ -89,31 +97,32 @@ class ProcessBuilderTest extends \PHPUnit_Framework_TestCase
             ->method('setName')
             ->with($this->equalTo('somename'));
 
-        $this->builder->build($this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->builder->build($this->getMockBuilder('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface')->getMock());
         $this->builder->registerStep('new', $step);
         $this->builder->add('somename', 'new');
 
-        $this->assertSame($step, $this->builder->getProcess()->getStepByName('somename'));
-        $this->assertCount(1, $this->builder->getProcess()->getSteps());
+        self::assertSame($step, $this->builder->getProcess()->getStepByName('somename'));
+        self::assertCount(1, $this->builder->getProcess()->getSteps());
     }
 
     /**
      * @test
      * @covers Sylius\Bundle\FlowBundle\Process\Builder\ProcessBuilder::add
-     * @expectedException InvalidArgumentException
+     *
      */
     public function shouldNotAddObjectWhichAreNotSteps()
     {
-        $this->builder->build($this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->expectException(\InvalidArgumentException::class);
+        $this->builder->build($this->getMockBuilder(ProcessScenarioInterface::class)->getMock());
         $this->builder->add('some', new \stdClass);
     }
 
     /**
      * @test
-     * @expectedException \RuntimeException
      */
     public function shouldNotRemoveStepWithoutProcess()
     {
+        $this->expectException(\RuntimeException::class);
         $this->builder->remove('test');
     }
 
@@ -122,100 +131,102 @@ class ProcessBuilderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldRemoveStepFromProcess()
     {
-        $this->builder->build($this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->builder->build($this->getMockBuilder(ProcessScenarioInterface::class)->getMock());
         $this->builder->add('some', $this->getStep('some'));
         $this->builder->remove('some');
 
-        $this->assertCount(0, $this->builder->getProcess()->getSteps());
+        self::assertCount(0, $this->builder->getProcess()->getSteps());
     }
 
     /**
      * @test
-     * @expectedException \RuntimeException
      */
-    public function shouldNotCheckIfStepIsSetWithoutProcess()
+    public function shouldNotCheckIfStepIsSetWithoutProcess(): void
     {
+        $this->expectException(\RuntimeException::class);
         $this->builder->has('test');
     }
 
     /**
      * @test
      */
-    public function shouldCheckIfStepIsSet()
+    public function shouldCheckIfStepIsSet(): void
     {
-        $this->builder->build($this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->builder->build($this->getMockBuilder(ProcessScenarioInterface::class)->getMock());
 
-        $this->assertFalse($this->builder->has('some'));
+        self::assertFalse($this->builder->has('some'));
         $this->builder->add('some', $this->getStep('some'));
-        $this->assertTrue($this->builder->has('some'));
+        self::assertTrue($this->builder->has('some'));
     }
 
     /**
      * @test
-     * @expectedException \RuntimeException
      */
-    public function shouldNotInjectDisplayRouteWithoutProcess()
+    public function shouldNotInjectDisplayRouteWithoutProcess(): void
     {
+        $this->expectException(\RuntimeException::class);
         $this->builder->setDisplayRoute('display_route');
     }
 
     /**
      * @test
      */
-    public function shouldInjectDisplayRouteToProcess()
+    public function shouldInjectDisplayRouteToProcess(): void
     {
-        $this->builder->build($this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->builder->build($this->getMockBuilder(ProcessScenarioInterface::class)->getMock());
         $this->builder->setDisplayRoute('display_route');
 
-        $this->assertEquals('display_route', $this->builder->getProcess()->getDisplayRoute());
+        self::assertEquals('display_route', $this->builder->getProcess()->getDisplayRoute());
     }
 
     /**
      * @test
-     * @expectedException \RuntimeException
      */
-    public function shouldNotInjectForwardRouteWithoutProcess()
+    public function shouldNotInjectForwardRouteWithoutProcess(): void
     {
+        $this->expectException(\RuntimeException::class);
         $this->builder->setForwardRoute('forward_route');
     }
 
     /**
      * @test
      */
-    public function shouldInjectForwardRouteToProcess()
+    public function shouldInjectForwardRouteToProcess(): void
     {
-        $this->builder->build($this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->builder->build($this->getMockBuilder(ProcessScenarioInterface::class)->getMock());
         $this->builder->setForwardRoute('forward_route');
 
-        $this->assertEquals('forward_route', $this->builder->getProcess()->getForwardRoute());
+        self::assertEquals('forward_route', $this->builder->getProcess()->getForwardRoute());
     }
 
     /**
      * @test
-     * @expectedException \RuntimeException
+     *
      */
-    public function shouldNotInjectRedirectWithoutProcess()
+    public function shouldNotInjectRedirectWithoutProcess(): void
     {
+        $this->expectException(\RuntimeException::class);
         $this->builder->setRedirect('redirect');
     }
 
     /**
      * @test
      */
-    public function shouldInjectRedirectToProcess()
+    public function shouldInjectRedirectToProcess(): void
     {
-        $this->builder->build($this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->builder->build($this->getMockBuilder(ProcessScenarioInterface::class)->getMock());
         $this->builder->setRedirect('redirect');
 
-        $this->assertEquals('redirect', $this->builder->getProcess()->getRedirect());
+        self::assertEquals('redirect', $this->builder->getProcess()->getRedirect());
     }
 
     /**
      * @test
-     * @expectedException \RuntimeException
+     *
      */
-    public function shouldNotInjectValidationClosureWithoutProcess()
+    public function shouldNotInjectValidationClosureWithoutProcess(): void
     {
+        $this->expectException(\RuntimeException::class);
         $this->builder->validate(function () {
             return 'my-closure';
         });
@@ -226,57 +237,58 @@ class ProcessBuilderTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldInjectValidationClosureToProcess()
     {
-        $this->builder->build($this->getMock('Sylius\Bundle\FlowBundle\Process\Scenario\ProcessScenarioInterface'));
+        $this->builder->build($this->getMockBuilder(ProcessScenarioInterface::class)->getMock());
         $this->builder->validate(function () {
             return false;
         });
 
         $validator = $this->builder->getProcess()->getValidator();
-        $this->assertEquals(false, $validator->isValid());
+        self::assertEquals(false, $validator->isValid());
     }
 
     /**
      * @test
-     * @expectedException InvalidArgumentException
+     *
      */
     public function shouldNotRegisterTwoThisSameSteps()
     {
+        $this->expectException(\InvalidArgumentException::class);
         $this->builder->registerStep('new', $this->getStep('somename'));
         $this->builder->registerStep('new', $this->getStep('somename'));
     }
 
     /**
      * @test
-     * @expectedException InvalidArgumentException
      */
-    public function shouldNotLoadStepWhenWasNotRegisteredBefore()
+    public function shouldNotLoadStepWhenWasNotRegisteredBefore(): void
     {
+        $this->expectException(\InvalidArgumentException::class);
         $this->builder->loadStep('new');
     }
 
     /**
      * @test
      */
-    public function shouldLoadStep()
+    public function shouldLoadStep(): void
     {
         $step = $this->getStep('somename');
         $this->builder->registerStep('new', $step);
 
-        $this->assertSame($this->builder->loadStep('new'), $step);
+        self::assertSame($this->builder->loadStep('new'), $step);
     }
 
     private function getStep($name = '')
     {
-        $step = $this->getMock('Sylius\Bundle\FlowBundle\Process\Step\StepInterface');
-        $step->expects($this->any())
+        $step = $this->getMockBuilder(StepInterface::class)->getMock();
+        $step
             ->method('getName')
-            ->will($this->returnValue($name));
-        $step->expects($this->any())
+            ->willReturn($name);
+        $step
             ->method('displayAction')
-            ->will($this->returnValue('displayActionResponse'));
-        $step->expects($this->any())
+            ->willReturn('displayActionResponse');
+        $step
             ->method('forwardAction')
-            ->will($this->returnValue('forwardActionResponse'));
+            ->willReturn('forwardActionResponse');
 
         return $step;
     }

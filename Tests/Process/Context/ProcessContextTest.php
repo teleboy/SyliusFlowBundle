@@ -11,29 +11,33 @@
 
 namespace Sylius\Bundle\FlowBundle\Tests\Process\Context;
 
+use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\FlowBundle\Storage\StorageInterface;
 use Sylius\Bundle\FlowBundle\Process\Context\ProcessContext;
 use Sylius\Bundle\FlowBundle\Validator\ProcessValidator;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * ProcessContext test.
  *
  * @author Leszek Prabucki <leszek.prabucki@gmail.com>
  */
-class ProcessContextTest extends \PHPUnit_Framework_TestCase
+class ProcessContextTest extends TestCase
 {
     /**
      * @test
      * @dataProvider getMethodsWithoutInitialize
-     * @expectedException RuntimeException
+     *
      */
-    public function shouldNotExecuteMethodsWithoutContextInitialize($methodName)
+    public function shouldNotExecuteMethodsWithoutContextInitialize($methodName): void
     {
-        $context = new ProcessContext($this->getMock('Sylius\Bundle\FlowBundle\Storage\StorageInterface'));
+        $this->expectException(\RuntimeException::class);
+        $context = new ProcessContext($this->getMockBuilder(StorageInterface::class)->getMock());
         $context->$methodName();
     }
 
-    public function getMethodsWithoutInitialize()
+    public function getMethodsWithoutInitialize(): array
     {
         return array(
             array('isValid'),
@@ -52,10 +56,10 @@ class ProcessContextTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function shouldInitializeStorage()
+    public function shouldInitializeStorage(): void
     {
-        $storage = $this->getMock('Sylius\Bundle\FlowBundle\Storage\StorageInterface');
-        $storage->expects($this->once())
+        $storage = $this->getMockBuilder(StorageInterface::class)->getMock();
+        $storage->expects(self::once())
             ->method('initialize')
             ->with($this->equalTo(md5('scenarioOne')));
 
@@ -73,10 +77,10 @@ class ProcessContextTest extends \PHPUnit_Framework_TestCase
             $this->getStep('step2')
         );
         $process = $this->getProcess($steps);
-        $context = new ProcessContext($this->getMock('Sylius\Bundle\FlowBundle\Storage\StorageInterface'));
+        $context = new ProcessContext($this->getMockBuilder(StorageInterface::class)->getMock());
         $context->initialize($process, $steps[1]);
 
-        $this->assertEquals('step1', $context->getPreviousStep()->getName());
+        self::assertEquals('step1', $context->getPreviousStep()->getName());
     }
 
     /**
@@ -89,26 +93,26 @@ class ProcessContextTest extends \PHPUnit_Framework_TestCase
             $this->getStep('step2')
         );
         $process = $this->getProcess($steps);
-        $context = new ProcessContext($this->getMock('Sylius\Bundle\FlowBundle\Storage\StorageInterface'));
+        $context = new ProcessContext($this->getMockBuilder(StorageInterface::class)->getMock());
         $context->initialize($process, $steps[0]);
 
-        $this->assertEquals('step2', $context->getNextStep()->getName());
+        self::assertEquals('step2', $context->getNextStep()->getName());
     }
 
     /**
      * @test
      */
-    public function shouldSetCurrentStepWhenInitialize()
+    public function shouldSetCurrentStepWhenInitialize(): void
     {
         $steps = array(
             $this->getStep('step1'),
             $this->getStep('step2')
         );
         $process = $this->getProcess($steps);
-        $context = new ProcessContext($this->getMock('Sylius\Bundle\FlowBundle\Storage\StorageInterface'));
+        $context = new ProcessContext($this->getMockBuilder(StorageInterface::class)->getMock());
         $context->initialize($process, $steps[0]);
 
-        $this->assertSame($steps[0], $context->getCurrentStep());
+        self::assertSame($steps[0], $context->getCurrentStep());
     }
 
     /**
@@ -122,22 +126,23 @@ class ProcessContextTest extends \PHPUnit_Framework_TestCase
         );
         $process = $this->getProcess($steps);
 
-        $firstStepContext = new ProcessContext($this->getMock('Sylius\Bundle\FlowBundle\Storage\StorageInterface'));
+        $firstStepContext = new ProcessContext($this->getMockBuilder(StorageInterface::class)->getMock());
         $firstStepContext->initialize($process, $steps[0]);
-        $lastStepContext = new ProcessContext($this->getMock('Sylius\Bundle\FlowBundle\Storage\StorageInterface'));
+        $lastStepContext = new ProcessContext($this->getMockBuilder(StorageInterface::class)->getMock());
         $lastStepContext->initialize($process, $steps[1]);
 
-        $this->assertTrue($firstStepContext->isFirstStep());
-        $this->assertFalse($lastStepContext->isFirstStep());
+        self::assertTrue($firstStepContext->isFirstStep());
+        self::assertFalse($lastStepContext->isFirstStep());
     }
 
     /**
      * @test
+     * @runInSeparateProcess
      */
-    public function shouldClearStorageWhenClose()
+    public function shouldClearStorageWhenClose(): void
     {
-        $storage = $this->getMock('Sylius\Bundle\FlowBundle\Storage\StorageInterface');
-        $storage->expects($this->once())
+        $storage = $this->getMockBuilder(StorageInterface::class)->getMock();
+        $storage->expects(self::once())
             ->method('clear');
 
         $context = new ProcessContext($storage);
@@ -148,7 +153,7 @@ class ProcessContextTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function shouldKnowWhenLastStep()
+    public function shouldKnowWhenLastStep(): void
     {
         $steps = array(
             $this->getStep('step1'),
@@ -156,26 +161,26 @@ class ProcessContextTest extends \PHPUnit_Framework_TestCase
         );
         $process = $this->getProcess($steps);
 
-        $firstStepContext = new ProcessContext($this->getMock('Sylius\Bundle\FlowBundle\Storage\StorageInterface'));
+        $firstStepContext = new ProcessContext($this->getMockBuilder(StorageInterface::class)->getMock());
         $firstStepContext->initialize($process, $steps[0]);
-        $lastStepContext = new ProcessContext($this->getMock('Sylius\Bundle\FlowBundle\Storage\StorageInterface'));
+        $lastStepContext = new ProcessContext($this->getMockBuilder(StorageInterface::class)->getMock());
         $lastStepContext->initialize($process, $steps[1]);
 
-        $this->assertFalse($firstStepContext->isLastStep());
-        $this->assertTrue($lastStepContext->isLastStep());
+        self::assertFalse($firstStepContext->isLastStep());
+        self::assertTrue($lastStepContext->isLastStep());
     }
 
     /**
      * @test
      */
-    public function shouldSetRequest()
+    public function shouldSetRequest(): void
     {
-        $request = $this->getMock('Symfony\Component\HttpFoundation\Request');
+        $request = $this->getMockBuilder(Request::class)->getMock();
 
-        $context = new ProcessContext($this->getMock('Sylius\Bundle\FlowBundle\Storage\StorageInterface'));
+        $context = new ProcessContext($this->getMockBuilder(StorageInterface::class)->getMock());
         $context->setRequest($request);
 
-        $this->assertSame($request, $context->getRequest());
+        self::assertSame($request, $context->getRequest());
     }
 
     /**
@@ -189,19 +194,19 @@ class ProcessContextTest extends \PHPUnit_Framework_TestCase
         );
         $process = $this->getProcess($steps);
 
-        $context = new ProcessContext($this->getMock('Sylius\Bundle\FlowBundle\Storage\StorageInterface'));
+        $context = new ProcessContext($this->getMockBuilder(StorageInterface::class)->getMock());
         $context->initialize($process, $steps[0]);
 
-        $this->assertSame($process, $context->getProcess());
+        self::assertSame($process, $context->getProcess());
     }
 
     /**
      * @test
-     * @expectedException RuntimeException
      */
-    public function shouldNotBeValidWhenNotInitialized()
+    public function shouldNotBeValidWhenNotInitialized(): void
     {
-        $context = new ProcessContext($this->getMock('Sylius\Bundle\FlowBundle\Storage\StorageInterface'));
+        $this->expectException(\RuntimeException::class);
+        $context = new ProcessContext($this->getMockBuilder(StorageInterface::class)->getMock());
 
         $context->isValid();
     }
@@ -209,28 +214,33 @@ class ProcessContextTest extends \PHPUnit_Framework_TestCase
     /**
      * @test
      */
-    public function shouldNotBeValidWhenProcessValidatorIsNotValid(
-    )
+    public function shouldNotBeValidWhenProcessValidatorIsNotValid(): void
     {
         $steps = array(
             $this->getStep('step1'),
             $this->getStep('step2')
         );
         $process = $this->getProcess($steps);
-        $process->expects($this->once())
+        $process->expects(self::once())
             ->method('getValidator')
-            ->will($this->returnValue(new ProcessValidator(function() { return false; })));
+            ->willReturn(
+                    new ProcessValidator(
+                            function () {
+                                return false;
+                            }
+                    )
+            );
 
-        $context = new ProcessContext($this->getMock('Sylius\Bundle\FlowBundle\Storage\StorageInterface'));
+        $context = new ProcessContext($this->getMockBuilder('Sylius\Bundle\FlowBundle\Storage\StorageInterface')->getMock());
         $context->initialize($process, $steps[0]);
 
-        $this->assertTrue($context->isValid() !== true);
+        self::assertNotTrue($context->isValid());
     }
 
     /**
      * @test
      */
-    public function shouldNotBeValidWhenStepIsNotInHistory()
+    public function shouldNotBeValidWhenStepIsNotInHistory(): void
     {
         $steps = array(
             $this->getStep('step1'),
@@ -245,13 +255,14 @@ class ProcessContextTest extends \PHPUnit_Framework_TestCase
         $context = new ProcessContext($storage);
         $context->initialize($process, $steps[1]);
 
-        $this->assertFalse($context->isValid());
+        self::assertFalse($context->isValid());
     }
 
     /**
      * @test
+     * @runInSeparateProcess
      */
-    public function shouldRewindHistory()
+    public function shouldRewindHistory(): void
     {
         $steps = array(
             $this->getStep('step1'),
@@ -266,16 +277,16 @@ class ProcessContextTest extends \PHPUnit_Framework_TestCase
         $context = new ProcessContext($storage);
         $context->initialize($process, $steps[0]);
 
-        $this->assertTrue($context->isValid());
+        self::assertTrue($context->isValid());
         $context->rewindHistory();
-        $this->assertCount(1, $storage->get('history'));
-        $this->assertTrue(in_array('step1', $storage->get('history')));
-        $this->assertFalse(in_array('step2', $storage->get('history')));
+        self::assertCount(1, $storage->get('history'));
+        self::assertContains('step1', $storage->get('history'));
+        self::assertNotContains('step2', $storage->get('history'));
     }
 
     /**
      * @test
-     * @expectedException Symfony\Component\HttpKernel\Exception\NotFoundHttpException
+     *
      */
     public function shouldFailToRewindHistory()
     {
@@ -292,6 +303,7 @@ class ProcessContextTest extends \PHPUnit_Framework_TestCase
         $context = new ProcessContext($storage);
         $context->initialize($process, $steps[0]);
 
+        $this->expectException(NotFoundHttpException::class);
         $context->rewindHistory();
     }
 
@@ -309,7 +321,7 @@ class ProcessContextTest extends \PHPUnit_Framework_TestCase
         $context = new ProcessContext(new TestArrayStorage());
         $context->initialize($process, $steps[0]);
 
-        $this->assertTrue($context->isValid());
+        self::assertTrue($context->isValid());
     }
 
     /**
@@ -329,20 +341,20 @@ class ProcessContextTest extends \PHPUnit_Framework_TestCase
         $context = new ProcessContext($storage);
         $context->initialize($process, $steps[0]);
 
-        $this->assertTrue($context->isValid());
+        self::assertTrue($context->isValid());
     }
 
     /**
      * @test
      */
-    public function shouldBeValidWithoutHistory()
+    public function shouldBeValidWithoutHistory(): void
     {
         $process = $this->getProcess(array());
 
-        $context = new ProcessContext($this->getMock('Sylius\Bundle\FlowBundle\Storage\StorageInterface'));
+        $context = new ProcessContext($this->getMockBuilder(StorageInterface::class)->getMock());
         $context->initialize($process, $this->getStep('someStep'));
 
-        $this->assertTrue($context->isValid());
+        self::assertTrue($context->isValid());
     }
 
     /**
@@ -353,10 +365,10 @@ class ProcessContextTest extends \PHPUnit_Framework_TestCase
     {
         $process = $this->getProcess($steps);
 
-        $context = new ProcessContext($this->getMock('Sylius\Bundle\FlowBundle\Storage\StorageInterface'));
+        $context = new ProcessContext($this->getMockBuilder('Sylius\Bundle\FlowBundle\Storage\StorageInterface')->getMock());
         $context->initialize($process, $steps[$index]);
 
-        $this->assertEquals($context->getProgress(), $expectedProgress);
+        self::assertEquals($context->getProgress(), $expectedProgress);
     }
 
     public function getProgressData()
@@ -404,18 +416,18 @@ class ProcessContextTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldInjectStorageBySetter()
     {
-        $storage1 = $this->getMock('Sylius\Bundle\FlowBundle\Storage\StorageInterface');
-        $storage2 = $this->getMock('Sylius\Bundle\FlowBundle\Storage\StorageInterface');
+        $storage1 = $this->getMockBuilder('Sylius\Bundle\FlowBundle\Storage\StorageInterface')->getMock();
+        $storage2 = $this->getMockBuilder('Sylius\Bundle\FlowBundle\Storage\StorageInterface')->getMock();
 
         $context = new ProcessContext($storage1);
         $context->setStorage($storage2);
 
-        $this->assertSame($storage2, $context->getStorage());
+        self::assertSame($storage2, $context->getStorage());
     }
 
     private function getProcess($steps = array())
     {
-        $process = $this->getMock('Sylius\Bundle\FlowBundle\Process\ProcessInterface');
+        $process = $this->getMockBuilder('Sylius\Bundle\FlowBundle\Process\ProcessInterface')->getMock();
         $process->expects($this->any())
             ->method('setScenarioAlias')
             ->with($this->equalTo('scenarioOne'));
@@ -434,7 +446,7 @@ class ProcessContextTest extends \PHPUnit_Framework_TestCase
 
     private function getStep($name)
     {
-        $step = $this->getMock('Sylius\Bundle\FlowBundle\Process\Step\StepInterface');
+        $step = $this->getMockBuilder('Sylius\Bundle\FlowBundle\Process\Step\StepInterface')->getMock();
         $step->expects($this->any())
             ->method('getName')
             ->will($this->returnValue($name));

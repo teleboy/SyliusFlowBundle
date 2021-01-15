@@ -268,7 +268,7 @@ class ProcessContext implements ProcessContextInterface
         $sessionHistory = $this->storage->get('history', []);
 
         // Are there steps missing in cookie history workaround? seems like cookie don't work here
-        return \count($sessionHistory) > \count($this->history) ? $sessionHistory : $this->history;
+        return is_countable($sessionHistory) && (\count($sessionHistory) > \count($this->history)) ? $sessionHistory : $this->history;
     }
 
     /**
