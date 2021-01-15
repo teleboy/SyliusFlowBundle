@@ -25,9 +25,13 @@
         "symfony/framework-bundle": "^3.4|^4.0"
     },
     "require-dev": {
-        "symfony/yaml": "^3.4|^4.0"
+        "symfony/yaml": "^3.4|^4.0",
+        "phpunit/phpunit": "^9.5"
     },
     "autoload": {
         "psr-4": { "Sylius\\Bundle\\FlowBundle\\": "" }
+    },
+    "scripts": {
+        "test": "vendor/phpunit/phpunit/phpunit"
     }
 }
