@@ -11,15 +11,17 @@
 
 namespace Sylius\Bundle\FlowBundle\Tests\Process\Step;
 
+use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\FlowBundle\Process\Context\ProcessContextInterface;
 use Sylius\Bundle\FlowBundle\Process\Step\ContainerAwareStep;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * ContainerAwareStepTest test.
  *
  * @author Leszek Prabucki <leszek.prabucki@gmail.com>
  */
-class ContainerAwareStepTest extends \PHPUnit_Framework_TestCase
+class ContainerAwareStepTest extends TestCase
 {
     /**
      * @test
@@ -27,11 +29,11 @@ class ContainerAwareStepTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldInjectContainerBySetter()
     {
-        $container = $this->getMock('Symfony\Component\DependencyInjection\ContainerInterface');
+        $container = $this->getMockBuilder(ContainerInterface::class)->getMock();
         $step = new TestContainerAwareStep();
         $step->setContainer($container);
 
-        $this->assertSame($step->getContainer(), $container);
+        self::assertSame($step->getContainer(), $container);
     }
 }
 

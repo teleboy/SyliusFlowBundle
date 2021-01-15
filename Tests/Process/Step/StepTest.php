@@ -11,6 +11,7 @@
 
 namespace Sylius\Bundle\FlowBundle\Tests\Process\Step;
 
+use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\FlowBundle\Process\Step\ActionResult;
 
 /**
@@ -18,7 +19,7 @@ use Sylius\Bundle\FlowBundle\Process\Step\ActionResult;
  *
  * @author Leszek Prabucki <leszek.prabucki@gmail.com>
  */
-class StepTest extends \PHPUnit_Framework_TestCase
+class StepTest extends TestCase
 {
     /**
      * @test
@@ -28,7 +29,7 @@ class StepTest extends \PHPUnit_Framework_TestCase
     {
         $step = $this->getStep();
 
-        $this->assertTrue($step->isActive());
+        self::assertTrue($step->isActive());
     }
 
     /**
@@ -37,12 +38,12 @@ class StepTest extends \PHPUnit_Framework_TestCase
      */
     public function shouldCompleteProcessByDefault()
     {
-        $processContext = $this->getMock('Sylius\Bundle\FlowBundle\Process\Context\ProcessContextInterface');
+        $processContext = $this->getMockBuilder('Sylius\Bundle\FlowBundle\Process\Context\ProcessContextInterface')->getMock();
 
         $step = $this->getStep();
         /** @var $result ActionResult */
         $result = $step->forwardAction($processContext);
-        $this->assertEmpty($result->getNextStepName());
+        self::assertEmpty($result->getNextStepName());
     }
 
     /**
@@ -55,7 +56,7 @@ class StepTest extends \PHPUnit_Framework_TestCase
         $step = $this->getStep();
         $step->setName('stepName');
 
-        $this->assertSame('stepName', $step->getName());
+        self::assertSame('stepName', $step->getName());
     }
 
     private function getStep()

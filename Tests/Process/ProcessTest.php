@@ -11,6 +11,7 @@
 
 namespace Sylius\Bundle\FlowBundle\Tests\Process;
 
+use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\FlowBundle\Process\Context\ProcessContextInterface;
 use Sylius\Bundle\FlowBundle\Process\Process;
 use Sylius\Bundle\FlowBundle\Process\Step\Step;
@@ -22,7 +23,7 @@ use Sylius\Bundle\FlowBundle\Validator\ProcessValidator;
  * @author Paweł Jędrzejewski <pjedrzejewski@diweb.pl>
  * @author Leszek Prabucki <leszek.prabucki@gmail.com>
  */
-class ProcessTest extends \PHPUnit_Framework_TestCase
+class ProcessTest extends TestCase
 {
     /**
      * @test
@@ -38,11 +39,11 @@ class ProcessTest extends \PHPUnit_Framework_TestCase
         $correctOrder = array('foo', 'bar', 'foobar');
 
         foreach ($process->getOrderedSteps() as $i => $step) {
-            $this->assertSame($correctOrder[$i], $step->getName());
+            self::assertSame($correctOrder[$i], $step->getName());
         }
 
         foreach ($correctOrder as $i => $name) {
-            $this->assertSame($name, $process->getStepByIndex($i)->getName());
+            self::assertSame($name, $process->getStepByIndex($i)->getName());
         }
     }
 
@@ -62,11 +63,11 @@ class ProcessTest extends \PHPUnit_Framework_TestCase
         $correctOrder = array('foo', 'bar', 'foobar');
 
         foreach ($process->getOrderedSteps() as $i => $step) {
-            $this->assertSame($correctOrder[$i], $step->getName());
+            self::assertSame($correctOrder[$i], $step->getName());
         }
 
         foreach ($correctOrder as $i => $name) {
-            $this->assertSame($name, $process->getStepByIndex($i)->getName());
+            self::assertSame($name, $process->getStepByIndex($i)->getName());
         }
     }
 
@@ -80,7 +81,7 @@ class ProcessTest extends \PHPUnit_Framework_TestCase
         $process->addStep('foo', $step1);
 
         $steps = $process->getSteps();
-        $this->assertSame($step1, $steps['foo']);
+        self::assertSame($step1, $steps['foo']);
     }
 
     /**
@@ -93,16 +94,17 @@ class ProcessTest extends \PHPUnit_Framework_TestCase
         $process->addStep('foo', new TestStep());
         $process->removeStep('foo');
 
-        $this->assertCount(0, $process->getSteps());
+        self::assertCount(0, $process->getSteps());
     }
 
     /**
      * @test
      * @covers Sylius\Bundle\FlowBundle\Process\Process::removeStep
-     * @expectedException \InvalidArgumentException
+     *
      */
     public function shouldNotRemoveStepWhenWasNotSet()
     {
+        $this->expectException(\InvalidArgumentException::class);
         $process = new Process();
         $process->removeStep('foo');
     }
@@ -117,15 +119,16 @@ class ProcessTest extends \PHPUnit_Framework_TestCase
         $process->setSteps(array('foo' => $step1));
 
         $steps = $process->getSteps();
-        $this->assertSame($step1, $steps['foo']);
+        self::assertSame($step1, $steps['foo']);
     }
 
     /**
      * @test
-     * @expectedException \InvalidArgumentException
+     *
      */
     public function shouldNotAddStepWithThisSameNameAgain()
     {
+        $this->expectException(\InvalidArgumentException::class);
         $process = new Process();
 
         $process->addStep('foo', new TestStep());
@@ -147,8 +150,8 @@ class ProcessTest extends \PHPUnit_Framework_TestCase
             'bar' => $step2,
         ));
 
-        $this->assertSame($step1, $process->getStepByIndex(0));
-        $this->assertSame($step2, $process->getStepByIndex(1));
+        self::assertSame($step1, $process->getStepByIndex(0));
+        self::assertSame($step2, $process->getStepByIndex(1));
     }
 
     /**
@@ -164,16 +167,17 @@ class ProcessTest extends \PHPUnit_Framework_TestCase
         $process->addStep('foo', $step1);
         $process->addStep('bar', $step2);
 
-        $this->assertSame($step1, $process->getStepByIndex(0));
-        $this->assertSame($step2, $process->getStepByIndex(1));
+        self::assertSame($step1, $process->getStepByIndex(0));
+        self::assertSame($step2, $process->getStepByIndex(1));
     }
 
     /**
      * @test
-     * @expectedException \InvalidArgumentException
+     *
      */
     public function shouldNotGetStepUsingIndexWhenWasNotSet()
     {
+        $this->expectException(\InvalidArgumentException::class);
         $process = new Process();
         $process->getStepByIndex(0);
     }
@@ -193,8 +197,8 @@ class ProcessTest extends \PHPUnit_Framework_TestCase
             'bar' => $step2,
         ));
 
-        $this->assertSame($step1, $process->getStepByName('foo'));
-        $this->assertSame($step2, $process->getStepByName('bar'));
+        self::assertSame($step1, $process->getStepByName('foo'));
+        self::assertSame($step2, $process->getStepByName('bar'));
     }
 
     /**
@@ -210,16 +214,17 @@ class ProcessTest extends \PHPUnit_Framework_TestCase
         $process->addStep('foo', $step1);
         $process->addStep('bar', $step2);
 
-        $this->assertSame($step1, $process->getStepByName('foo'));
-        $this->assertSame($step2, $process->getStepByName('bar'));
+        self::assertSame($step1, $process->getStepByName('foo'));
+        self::assertSame($step2, $process->getStepByName('bar'));
     }
 
     /**
      * @test
-     * @expectedException \InvalidArgumentException
+     *
      */
     public function shouldNotGetStepUsingNameWhenWasNotSet()
     {
+        $this->expectException(\InvalidArgumentException::class);
         $process = new Process();
         $process->getStepByName('foo');
     }
@@ -238,7 +243,7 @@ class ProcessTest extends \PHPUnit_Framework_TestCase
         $process->addStep('foo', $step1);
         $process->addStep('bar', $step2);
 
-        $this->assertSame($step2, $process->getLastStep());
+        self::assertSame($step2, $process->getLastStep());
     }
 
     /**
@@ -255,7 +260,7 @@ class ProcessTest extends \PHPUnit_Framework_TestCase
         $process->addStep('foo', $step1);
         $process->addStep('bar', $step2);
 
-        $this->assertSame($step1, $process->getFirstStep());
+        self::assertSame($step1, $process->getFirstStep());
     }
 
     /**
@@ -273,11 +278,11 @@ class ProcessTest extends \PHPUnit_Framework_TestCase
         }));
 
         $validator = $process->getValidator();
-        $this->assertSame('alias', $process->getScenarioAlias());
-        $this->assertSame('displayRoute', $process->getDisplayRoute());
-        $this->assertSame('forwardRoute', $process->getForwardRoute());
-        $this->assertSame('http://somepage', $process->getRedirect());
-        $this->assertSame(false, $validator->isValid());
+        self::assertSame('alias', $process->getScenarioAlias());
+        self::assertSame('displayRoute', $process->getDisplayRoute());
+        self::assertSame('forwardRoute', $process->getForwardRoute());
+        self::assertSame('http://somepage', $process->getRedirect());
+        self::assertFalse($validator->isValid());
     }
 
     /**
@@ -291,7 +296,7 @@ class ProcessTest extends \PHPUnit_Framework_TestCase
 
         $process->setSteps($steps);
 
-        $this->assertEquals($process->countSteps(), $expectedCount);
+        self::assertEquals($process->countSteps(), $expectedCount);
     }
 
     public function countStepsDataProvider()

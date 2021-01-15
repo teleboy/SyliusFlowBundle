@@ -11,6 +11,7 @@
 
 namespace Sylius\Bundle\FlowBundle\Tests\Storage;
 
+use PHPUnit\Framework\TestCase;
 use Sylius\Bundle\FlowBundle\Storage\Storage;
 
 /**
@@ -18,21 +19,16 @@ use Sylius\Bundle\FlowBundle\Storage\Storage;
  *
  * @author Leszek Prabucki <leszek.prabucki@gmail.com>
  */
-class StorageTest extends \PHPUnit_Framework_TestCase
+class StorageTest extends TestCase
 {
     /**
      * @test
-     * @covers Sylius\Bundle\FlowBundle\Storage\Storage
      */
-    public function shouldSetDomainWhenInitialize()
+    public function shouldSetDomainWhenInitialize(): void
     {
-        $storage = $this->getMockForAbstractClass('Sylius\Bundle\FlowBundle\Storage\Storage');
+        $storage = $this->getMockForAbstractClass(Storage::class);
         $storage->initialize('mydomain');
 
-        $this->assertAttributeEquals(
-            'mydomain',
-            'domain',
-            $storage
-        );
+        self::assertObjectHasAttribute('domain', $storage);
     }
 }
